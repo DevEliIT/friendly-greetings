@@ -36,8 +36,24 @@ export function SpotifyPlaylist() {
     fetchPlaylist();
   }, []);
 
-  const spotifyId = playlistUrl ? extractSpotifyId(playlistUrl) : null;
-  const spotifyType = playlistUrl ? getSpotifyType(playlistUrl) : null;
+
+  function parseSpotifyUrl(url: string): { type: 'playlist' | 'album'; id: string } | null {
+    const match = url.match(
+      /spotify\.com\/(?:embed\/)?(playlist|album)\/([a-zA-Z0-9]+)/
+    );
+
+    if (!match) return null;
+
+    return {
+      type: match[1] as 'playlist' | 'album',
+      id: match[2],
+    };
+  }
+
+  const parsed = playlistUrl ? parseSpotifyUrl(playlistUrl) : null;
+
+  const spotifyType = parsed?.type ?? null;
+  const spotifyId = parsed?.id ?? null;
 
   if (isLoading) {
     return (
