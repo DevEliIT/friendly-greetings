@@ -1,14 +1,48 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Helmet } from 'react-helmet-async';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { RecentStories } from '@/components/home/RecentStories';
+import { OurStory } from '@/components/home/OurStory';
+import { SpotifyPlaylist } from '@/components/home/SpotifyPlaylist';
+import { SleepingGallery } from '@/components/home/SleepingGallery';
 
-const Index = () => {
+export default function Index() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
-};
+    <>
+      <Helmet>
+        <title>Nós Dois - Blog de Casal</title>
+        <meta name="description" content="Um blog de casal onde histórias reais são contadas como notícias, com duas perspectivas diferentes do mesmo momento." />
+      </Helmet>
+      
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        
+        <main className="flex-1">
+          {/* Hero Section */}
+          <section className="relative overflow-hidden py-20">
+            <div className="container mx-auto px-4 text-center">
+              <h1 className="animate-fade-up font-display text-4xl font-semibold leading-tight md:text-5xl lg:text-6xl">
+                Duas versões,<br />
+                <span className="text-primary">uma história</span>
+              </h1>
+              <p className="mx-auto mt-6 max-w-2xl animate-fade-up text-lg text-muted-foreground" style={{ animationDelay: '100ms' }}>
+                Cada momento vivido juntos, contado de duas perspectivas. 
+                Porque o amor é feito de memórias compartilhadas — e cada um guarda a sua versão.
+              </p>
+            </div>
+            
+            {/* Subtle decorative element */}
+            <div className="absolute -bottom-24 left-1/2 h-48 w-[600px] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl" />
+          </section>
 
-export default Index;
+          <RecentStories />
+          <OurStory />
+          <SpotifyPlaylist />
+          <SleepingGallery />
+        </main>
+
+        <Footer />
+      </div>
+    </>
+  );
+}
