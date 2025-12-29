@@ -40,13 +40,27 @@ export interface Page {
   updated_at: string;
 }
 
-export interface GalleryPhoto {
+export interface GalleryCategory {
   id: string;
+  name: string;
+  slug: string;
+  is_protected: boolean;
+  position: number;
+  created_at: string;
+}
+
+export interface GalleryMedia {
+  id: string;
+  category_id: string | null;
   url: string;
+  media_type: 'image' | 'video' | 'audio';
   caption: string | null;
   position: number;
   created_at: string;
 }
+
+// Alias for backwards compatibility
+export type GalleryPhoto = GalleryMedia;
 
 export interface Setting {
   id: string;

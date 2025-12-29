@@ -200,7 +200,7 @@ export default function PostForm() {
           { post_id: postId, persona: 'her', content: contentHer },
         ]);
 
-        // Handle media
+        // Handle media - also copy to gallery "Notícias Postadas" category
         await supabase.from('post_media').delete().eq('post_id', postId);
         
         if (media.length > 0) {
@@ -213,6 +213,26 @@ export default function PostForm() {
               position: i,
             }))
           );
+
+          // Get the "Notícias Postadas" category
+          const { data: newsCategory } = await supabase
+            .from('gallery_categories')
+            .select('id')
+            .eq('slug', 'noticias-postadas')
+            .maybeSingle();
+
+          if (newsCategory) {
+            // Add media to gallery under the news category
+            await supabase.from('gallery_photos').insert(
+              media.map((m, i) => ({
+                url: m.url,
+                media_type: m.media_type,
+                caption: m.caption || title,
+                position: i,
+                category_id: newsCategory.id,
+              }))
+            );
+          }
         }
       }
 
