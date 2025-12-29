@@ -4,7 +4,7 @@ import { Footer } from '@/components/layout/Footer';
 import { RecentStories } from '@/components/home/RecentStories';
 import { OurStory } from '@/components/home/OurStory';
 import { SpotifyPlaylist } from '@/components/home/SpotifyPlaylist';
-import { SleepingGallery } from '@/components/home/SleepingGallery';
+import { FullGallery } from '@/components/home/FullGallery';
 
 export default function Index() {
   return (
@@ -38,7 +38,7 @@ export default function Index() {
           <RecentStories />
           <OurStory />
           <SpotifyPlaylist />
-          <SleepingGallery />
+          <FullGallery />
         </main>
 
         <Footer />

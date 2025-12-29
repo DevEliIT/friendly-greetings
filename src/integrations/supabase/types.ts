@@ -14,29 +14,70 @@ export type Database = {
   }
   public: {
     Tables: {
+      gallery_categories: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_protected: boolean
+          name: string
+          position: number | null
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_protected?: boolean
+          name: string
+          position?: number | null
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_protected?: boolean
+          name?: string
+          position?: number | null
+          slug?: string
+        }
+        Relationships: []
+      }
       gallery_photos: {
         Row: {
           caption: string | null
+          category_id: string | null
           created_at: string | null
           id: string
+          media_type: string
           position: number | null
           url: string
         }
         Insert: {
           caption?: string | null
+          category_id?: string | null
           created_at?: string | null
           id?: string
+          media_type?: string
           position?: number | null
           url: string
         }
         Update: {
           caption?: string | null
+          category_id?: string | null
           created_at?: string | null
           id?: string
+          media_type?: string
           position?: number | null
           url?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gallery_photos_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pages: {
         Row: {
