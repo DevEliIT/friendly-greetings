@@ -11,6 +11,7 @@ interface AdminLayoutProps {
 }
 
 const navItems = [
+  { href: '/', icon: Heart, label: 'Início' },
   { href: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/admin/historias', icon: FileText, label: 'Histórias' },
   { href: '/admin/galeria', icon: Image, label: 'Galeria' },

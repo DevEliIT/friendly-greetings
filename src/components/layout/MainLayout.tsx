@@ -10,7 +10,7 @@ interface MainLayoutProps {
 
 const navItems = [
   { href: '/', icon: Heart, label: 'Início' },
-  { href: '/noticias', icon: Newspaper, label: 'Notícias' },
+  { href: '/noticias', icon: Newspaper, label: 'Vivências' },
   { href: '/galeria', icon: Camera, label: 'Galeria' },
   { href: '/nossa-historia', icon: BookOpen, label: 'Nossa História' },
   // admin

@@ -38,7 +38,7 @@ export function HomeStoriesHighlights() {
           <div className="mb-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Newspaper className="h-6 w-6 text-accent" />
-              <h2 className="font-display text-3xl font-semibold">Destaques</h2>
+              <h2 className="font-display text-3xl font-semibold">Vivências</h2>
             </div>
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -65,7 +65,7 @@ export function HomeStoriesHighlights() {
         <div className="mb-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Newspaper className="h-6 w-6 text-accent" />
-            <h2 className="font-display text-3xl font-semibold">Destaques</h2>
+            <h2 className="font-display text-3xl font-semibold">Vivências</h2>
           </div>
           <Link to="/noticias">
             <Button variant="ghost" size="sm">
