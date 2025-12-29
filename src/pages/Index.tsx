@@ -8,10 +8,10 @@ import { HomeGalleryHighlights } from '@/components/home/HomeGalleryHighlights';
 export default function Index() {
   return (
     <>
-      <Helmet>
+      {/* <Helmet>
         <title>Nós Dois - Blog de Casal</title>
         <meta name="description" content="Um blog de casal onde histórias reais são contadas como notícias, com duas perspectivas diferentes do mesmo momento." />
-      </Helmet>
+      </Helmet> */}
       
       <MainLayout>
         {/* Hero Section */}
