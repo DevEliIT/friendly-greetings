@@ -11,7 +11,7 @@ export default function NossaHistoria() {
       </Helmet>
 
       <MainLayout>
-        <div className="py-8">
+        <div className="py-8 h-full">
           <OurStory />
         </div>
       </MainLayout>

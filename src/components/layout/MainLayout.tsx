@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Heart, Newspaper, Camera, BookOpen, Menu, X } from 'lucide-react';
+import { Heart, Newspaper, Camera, BookOpen, Menu, X, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,8 @@ const navItems = [
   { href: '/noticias', icon: Newspaper, label: 'Notícias' },
   { href: '/galeria', icon: Camera, label: 'Galeria' },
   { href: '/nossa-historia', icon: BookOpen, label: 'Nossa História' },
+  // admin
+  { href: '/admin', icon: Settings, label: 'Administrador' }
 ];
 
 export function MainLayout({ children }: MainLayoutProps) {

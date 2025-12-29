@@ -8,15 +8,17 @@ import { HomeGalleryHighlights } from '@/components/home/HomeGalleryHighlights';
 export default function Index() {
   return (
     <>
-      {/* <Helmet>
-        <title>Nós Dois - Blog de Casal</title>
-        <meta name="description" content="Um blog de casal onde histórias reais são contadas como notícias, com duas perspectivas diferentes do mesmo momento." />
-      </Helmet> */}
+      <Helmet>
+        <title>Malu e Eliabe</title>
+        <meta name="description" content="Nossa história contada de duas perspectivas." />
+      </Helmet>
       
       <MainLayout>
         {/* Hero Section */}
-        <section className="relative overflow-hidden py-20">
-          <div className="container mx-auto px-4 text-center">
+        <section className="relative overflow-hidden py-20" style={{
+          // backgroundImage: "url('/eliabe-malu.jpeg')",
+        }}>
+          <div className="container mx-auto px-4 text-center" >
             <h1 className="animate-fade-up font-display text-4xl font-semibold leading-tight md:text-5xl lg:text-6xl">
               Duas versões,<br />
               <span className="text-primary">uma história</span>
@@ -30,9 +32,10 @@ export default function Index() {
           {/* Subtle decorative element */}
           <div className="absolute -bottom-24 left-1/2 h-48 w-[600px] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl" />
         </section>
-
+        <div className="h-[fit-content]">
+          <OurStory />
+        </div>
         <HomeStoriesHighlights />
-        <OurStory />
         <SpotifyPlaylist />
         <HomeGalleryHighlights />
       </MainLayout>

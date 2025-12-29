@@ -31,7 +31,7 @@ export function OurStory() {
   const hasContent = content && content.trim().length > 0;
 
   return (
-    <section id="nossa-historia" className="bg-card/50 py-16">
+    <section id="nossa-historia" className="bg-card/50 py-16 h-full">
       <div className="container mx-auto px-4">
         <div className="mb-8 flex items-center gap-3">
           <Heart className="h-6 w-6 text-accent" fill="currentColor" />
