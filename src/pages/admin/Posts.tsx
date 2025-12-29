@@ -134,7 +134,7 @@ export default function Posts() {
                     )}
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap pb-2">
                         <h3 className="truncate font-display text-lg font-semibold">{post.title}</h3>
                         <Badge variant={post.is_published ? 'default' : 'secondary'}>
                           {post.is_published ? 'Publicado' : 'Rascunho'}
