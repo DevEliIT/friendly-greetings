@@ -33,7 +33,7 @@ export default function Noticias() {
   return (
     <>
       <Helmet>
-        <title>Notícias - Nós Dois</title>
+        <title>Vivências - Nós Dois</title>
         <meta name="description" content="Todas as histórias do nosso relacionamento contadas de duas perspectivas." />
       </Helmet>
 
@@ -41,7 +41,7 @@ export default function Noticias() {
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8 flex items-center gap-3">
             <Newspaper className="h-7 w-7 text-accent" />
-            <h1 className="font-display text-3xl font-semibold">Todas as Notícias</h1>
+            <h1 className="font-display text-3xl font-semibold">Tudo o que já vivemos</h1>
           </div>
 
           {isLoading ? (

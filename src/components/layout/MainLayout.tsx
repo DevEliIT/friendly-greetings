@@ -24,7 +24,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="flex min-h-screen">
       {/* Desktop Sidebar */}
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r border-border bg-sidebar-background md:block">
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r border-border bg-white md:block">
         <div className="flex h-full flex-col">
           <Link to="/" className="flex items-center gap-2 border-b border-border px-6 py-5">
             <Heart className="h-6 w-6 text-accent" fill="currentColor" />
@@ -84,7 +84,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Mobile Sidebar */}
       <aside 
         className={cn(
-          'fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 transform border-r border-border bg-sidebar-background transition-transform md:hidden',
+          'fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 transform border-r border-border bg-white transition-transform md:hidden',
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >

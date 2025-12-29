@@ -76,7 +76,7 @@ export default function Gallery() {
       const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(fileName);
 
       const mediaType = file.type.startsWith('video/') ? 'video' :
-                       file.type.startsWith('audio/') ? 'audio' : 'image';
+                        file.type.startsWith('audio/') ? 'audio' : 'image';
 
       const { error: insertError } = await supabase
         .from('gallery_photos')
@@ -260,33 +260,32 @@ export default function Gallery() {
                       >
                         <Folder className="mr-2 h-4 w-4" />
                         {cat.name}
-                        {cat.show_on_home && <HomeIcon className="ml-1 h-3 w-3 text-primary" />}
+                        {cat.show_on_home && <HomeIcon className={`ml-1 h-3 w-3 ${activeCategory === cat.id ? 'text-white' : "text-primary"}`} />}
                         {cat.is_protected && <span className="ml-1 text-xs opacity-60">(protegida)</span>}
                       </Button>
-                      {!cat.is_protected && (
+                      {!cat.is_protected && activeCategory === cat.id && (
                         <>
                           <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
+                            variant="default"
+                            size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               toggleCategoryShowOnHome(cat.id, cat.show_on_home);
                             }}
                             title={cat.show_on_home ? 'Remover da home' : 'Mostrar na home'}
                           >
-                            <HomeIcon className={`h-3 w-3 ${cat.show_on_home ? 'text-primary' : 'text-muted-foreground'}`} />
+                            <HomeIcon className={`h-3 w-3 text-white`} />
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100"
+                            variant="default"
+                            size="sm"
+                            className="bg-destructive"
                             onClick={(e) => {
                               e.stopPropagation();
                               setDeleteCategoryId(cat.id);
                             }}
                           >
-                            <Trash2 className="h-3 w-3 text-destructive" />
+                            <Trash2 className="h-3 w-3 text-white" />
                           </Button>
                         </>
                       )}
