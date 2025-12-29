@@ -6,7 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { ArrowLeft, User, Calendar, Play, Pause, Volume2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Post, PostVersion, PostMedia, Persona } from '@/types/blog';
-import { Header } from '@/components/layout/Header';
+// import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { PersonaToggle } from '@/components/ui/PersonaToggle';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -49,7 +49,7 @@ export default function Story() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
-        <Header />
+        {/* <Header /> */}
         <main className="flex-1">
           <div className="container mx-auto max-w-4xl px-4 py-12">
             <Skeleton className="mb-8 h-8 w-32" />
@@ -66,7 +66,7 @@ export default function Story() {
   if (!post) {
     return (
       <div className="flex min-h-screen flex-col">
-        <Header />
+        {/* <Header /> */}
         <main className="flex-1">
           <div className="container mx-auto max-w-4xl px-4 py-24 text-center">
             <h1 className="font-display text-3xl font-semibold">História não encontrada</h1>
@@ -92,7 +92,7 @@ export default function Story() {
       </Helmet>
 
       <div className="flex min-h-screen flex-col">
-        <Header />
+        {/* <Header /> */}
 
         <main className="flex-1">
           <article className="container mx-auto max-w-4xl px-4 py-12">
