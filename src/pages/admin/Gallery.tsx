@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Plus, Trash2, Loader2, FolderPlus, Folder, Image, Video, Music } from 'lucide-react';
+import { Plus, Trash2, Loader2, FolderPlus, Folder, Image, Video, Music, Home, HomeIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import type { GalleryCategory, GalleryMedia } from '@/types/blog';
 
 export default function Gallery() {
@@ -124,6 +125,8 @@ export default function Gallery() {
     setDeleteMediaId(null);
   }
 
+  const [newCategoryShowOnHome, setNewCategoryShowOnHome] = useState(false);
+
   async function handleCreateCategory() {
     if (!newCategoryName.trim()) return;
 
@@ -135,6 +138,7 @@ export default function Gallery() {
         name: newCategoryName, 
         slug,
         position: categories.length,
+        show_on_home: newCategoryShowOnHome,
       });
 
     if (error) {
@@ -142,7 +146,22 @@ export default function Gallery() {
     } else {
       toast({ title: 'Categoria criada' });
       setNewCategoryName('');
+      setNewCategoryShowOnHome(false);
       setShowNewCategory(false);
+      fetchData();
+    }
+  }
+
+  async function toggleCategoryShowOnHome(id: string, currentValue: boolean) {
+    const { error } = await supabase
+      .from('gallery_categories')
+      .update({ show_on_home: !currentValue })
+      .eq('id', id);
+
+    if (error) {
+      toast({ variant: 'destructive', title: 'Erro', description: error.message });
+    } else {
+      toast({ title: currentValue ? 'Removido da home' : 'Adicionado à home' });
       fetchData();
     }
   }
@@ -232,29 +251,44 @@ export default function Gallery() {
                     Todas
                   </Button>
                   {categories.map((cat) => (
-                    <div key={cat.id} className="group relative">
+                    <div key={cat.id} className="group relative flex items-center gap-1">
                       <Button
                         variant={activeCategory === cat.id ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setActiveCategory(cat.id)}
-                        className="pr-8"
+                        className={cat.is_protected ? '' : 'pr-8'}
                       >
                         <Folder className="mr-2 h-4 w-4" />
                         {cat.name}
+                        {cat.show_on_home && <HomeIcon className="ml-1 h-3 w-3 text-primary" />}
                         {cat.is_protected && <span className="ml-1 text-xs opacity-60">(protegida)</span>}
                       </Button>
                       {!cat.is_protected && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 h-full w-8 opacity-0 group-hover:opacity-100"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteCategoryId(cat.id);
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3 text-destructive" />
-                        </Button>
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleCategoryShowOnHome(cat.id, cat.show_on_home);
+                            }}
+                            title={cat.show_on_home ? 'Remover da home' : 'Mostrar na home'}
+                          >
+                            <HomeIcon className={`h-3 w-3 ${cat.show_on_home ? 'text-primary' : 'text-muted-foreground'}`} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteCategoryId(cat.id);
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   ))}
@@ -383,6 +417,14 @@ export default function Gallery() {
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
                   placeholder="Ex: Viagens, Aniversários..."
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="showOnHome">Mostrar na página inicial</Label>
+                <Switch
+                  id="showOnHome"
+                  checked={newCategoryShowOnHome}
+                  onCheckedChange={setNewCategoryShowOnHome}
                 />
               </div>
             </div>
