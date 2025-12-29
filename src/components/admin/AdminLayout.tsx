@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Heart, LayoutDashboard, FileText, Image, Settings, LogOut } from 'lucide-react';
+import { Heart, LayoutDashboard, FileText, Image, Settings, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,6 +22,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const { signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
@@ -30,8 +31,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-sidebar-background">
+      {/* Desktop Sidebar */}
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r border-border bg-white md:block">
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-2 border-b border-border px-6 py-4">
             <Heart className="h-6 w-6 text-accent" fill="currentColor" />
@@ -73,9 +74,74 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         </div>
       </aside>
 
+      {/* Mobile Header */}
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur md:hidden">
+        <div className="flex items-center gap-2">
+          <Heart className="h-5 w-5 text-accent" fill="currentColor" />
+          <span className="font-display text-lg font-semibold">Admin</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </Button>
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-foreground/50 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar */}
+      <aside 
+        className={cn(
+          'fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 transform border-r border-border bg-white transition-transform md:hidden',
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        <nav className="flex-1 space-y-1 p-4">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.href || 
+                (item.href !== '/admin' && location.pathname.startsWith(item.href));
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="border-t border-border p-4">
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </Button>
+          </div>
+      </aside>
+
       {/* Main content */}
-      <main className="ml-64 flex-1">
-        <header className="sticky top-0 z-30 border-b border-border bg-background/95 px-8 py-4 backdrop-blur">
+      <main className="flex-1 pt-16 md:ml-64 md:pt-0">
+        <header className="sticky top-0 z-30 hidden border-b border-border bg-background/95 px-8 py-4 backdrop-blur md:block">
           <h1 className="font-display text-2xl font-semibold">{title}</h1>
         </header>
         <div className="p-8">{children}</div>

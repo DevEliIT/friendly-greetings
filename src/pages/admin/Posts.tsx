@@ -121,36 +121,38 @@ export default function Posts() {
           <div className="space-y-4">
             {posts.map((post) => (
               <Card key={post.id}>
-                <CardContent className="flex items-center gap-4 p-4">
-                  {post.cover_url && (
-                    <div className="h-16 w-24 flex-shrink-0 overflow-hidden rounded-md">
-                      {post.cover_type === 'video' ? (
-                        <video src={post.cover_url} className="h-full w-full object-cover" />
-                      ) : (
-                        <img src={post.cover_url} alt="" className="h-full w-full object-cover" />
-                      )}
-                    </div>
-                  )}
+                <CardContent className="flex items-center gap-4 p-4 flex-wrap justify-between">
+                  <div className="flex flex-row gap-4">
+                    {post.cover_url && (
+                      <div className="h-16 w-24 flex-shrink-0 overflow-hidden rounded-md">
+                        {post.cover_type === 'video' ? (
+                          <video src={post.cover_url} className="h-full w-full object-cover" />
+                        ) : (
+                          <img src={post.cover_url} alt="" className="h-full w-full object-cover" />
+                        )}
+                      </div>
+                    )}
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="truncate font-display text-lg font-semibold">{post.title}</h3>
-                      <Badge variant={post.is_published ? 'default' : 'secondary'}>
-                        {post.is_published ? 'Publicado' : 'Rascunho'}
-                      </Badge>
-                      {post.show_on_home && (
-                        <Badge variant="outline" className="border-primary text-primary">
-                          <Home className="mr-1 h-3 w-3" />
-                          Destaque
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="truncate font-display text-lg font-semibold">{post.title}</h3>
+                        <Badge variant={post.is_published ? 'default' : 'secondary'}>
+                          {post.is_published ? 'Publicado' : 'Rascunho'}
                         </Badge>
-                      )}
+                        {post.show_on_home && (
+                          <Badge variant="outline" className="border-primary text-primary">
+                            <Home className="mr-1 h-3 w-3" />
+                            Destaque
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Por {post.author_persona === 'him' ? 'Ele' : 'Ela'} • {format(new Date(post.created_at), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Por {post.author_persona === 'him' ? 'Ele' : 'Ela'} • {format(new Date(post.created_at), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
