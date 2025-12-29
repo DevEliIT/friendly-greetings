@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Newspaper, User } from 'lucide-react';
+import { Newspaper, User, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Post } from '@/types/blog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
-export function RecentStories() {
+export function HomeStoriesHighlights() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -17,6 +18,7 @@ export function RecentStories() {
         .from('posts')
         .select('*')
         .eq('is_published', true)
+        .eq('show_on_home', true)
         .order('created_at', { ascending: false })
         .limit(6);
 
@@ -33,9 +35,11 @@ export function RecentStories() {
     return (
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="mb-10 flex items-center gap-3">
-            <Newspaper className="h-6 w-6 text-accent" />
-            <h2 className="font-display text-3xl font-semibold">Notícias mais recentes</h2>
+          <div className="mb-10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Newspaper className="h-6 w-6 text-accent" />
+              <h2 className="font-display text-3xl font-semibold">Destaques</h2>
+            </div>
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
@@ -52,28 +56,23 @@ export function RecentStories() {
   }
 
   if (posts.length === 0) {
-    return (
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="mb-10 flex items-center gap-3">
-            <Newspaper className="h-6 w-6 text-accent" />
-            <h2 className="font-display text-3xl font-semibold">Notícias mais recentes</h2>
-          </div>
-          <div className="rounded-lg border border-dashed border-border bg-card/50 py-16 text-center">
-            <p className="text-muted-foreground">Nenhuma história publicada ainda.</p>
-            <p className="mt-1 text-sm text-muted-foreground/70">Em breve teremos novidades!</p>
-          </div>
-        </div>
-      </section>
-    );
+    return null; // Don't show section if no featured posts
   }
 
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
-        <div className="mb-10 flex items-center gap-3">
-          <Newspaper className="h-6 w-6 text-accent" />
-          <h2 className="font-display text-3xl font-semibold">Notícias mais recentes</h2>
+        <div className="mb-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Newspaper className="h-6 w-6 text-accent" />
+            <h2 className="font-display text-3xl font-semibold">Destaques</h2>
+          </div>
+          <Link to="/noticias">
+            <Button variant="ghost" size="sm">
+              Ver todas
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((post, index) => (

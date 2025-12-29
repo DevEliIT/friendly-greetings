@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, Home } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,6 +56,20 @@ export default function Posts() {
       toast({ variant: 'destructive', title: 'Erro', description: error.message });
     } else {
       toast({ title: post.is_published ? 'História despublicada' : 'História publicada' });
+      fetchPosts();
+    }
+  }
+
+  async function toggleShowOnHome(post: Post) {
+    const { error } = await supabase
+      .from('posts')
+      .update({ show_on_home: !post.show_on_home })
+      .eq('id', post.id);
+
+    if (error) {
+      toast({ variant: 'destructive', title: 'Erro', description: error.message });
+    } else {
+      toast({ title: post.show_on_home ? 'Removida dos destaques' : 'Adicionada aos destaques' });
       fetchPosts();
     }
   }
@@ -124,6 +138,12 @@ export default function Posts() {
                       <Badge variant={post.is_published ? 'default' : 'secondary'}>
                         {post.is_published ? 'Publicado' : 'Rascunho'}
                       </Badge>
+                      {post.show_on_home && (
+                        <Badge variant="outline" className="border-primary text-primary">
+                          <Home className="mr-1 h-3 w-3" />
+                          Destaque
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Por {post.author_persona === 'him' ? 'Ele' : 'Ela'} • {format(new Date(post.created_at), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
@@ -131,6 +151,14 @@ export default function Posts() {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => toggleShowOnHome(post)}
+                      title={post.show_on_home ? 'Remover dos destaques' : 'Adicionar aos destaques'}
+                    >
+                      <Home className={`h-4 w-4 ${post.show_on_home ? 'text-primary' : ''}`} />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"

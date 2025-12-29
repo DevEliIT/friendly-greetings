@@ -8,6 +8,9 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
 import Index from "./pages/Index";
 import Story from "./pages/Story";
+import Noticias from "./pages/Noticias";
+import GaleriaPage from "./pages/GaleriaPage";
+import NossaHistoria from "./pages/NossaHistoria";
 import Login from "./pages/Login";
 import Dashboard from "./pages/admin/Dashboard";
 import Posts from "./pages/admin/Posts";
@@ -29,6 +32,9 @@ const App = () => (
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />
+              <Route path="/noticias" element={<Noticias />} />
+              <Route path="/galeria" element={<GaleriaPage />} />
+              <Route path="/nossa-historia" element={<NossaHistoria />} />
               <Route path="/historia/:id" element={<Story />} />
               <Route path="/login" element={<Login />} />
 

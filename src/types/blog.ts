@@ -7,6 +7,7 @@ export interface Post {
   cover_type: 'image' | 'video';
   author_persona: Persona;
   is_published: boolean;
+  show_on_home: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -45,6 +46,7 @@ export interface GalleryCategory {
   name: string;
   slug: string;
   is_protected: boolean;
+  show_on_home: boolean;
   position: number;
   created_at: string;
 }

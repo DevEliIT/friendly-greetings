@@ -21,6 +21,7 @@ export type Database = {
           is_protected: boolean
           name: string
           position: number | null
+          show_on_home: boolean
           slug: string
         }
         Insert: {
@@ -29,6 +30,7 @@ export type Database = {
           is_protected?: boolean
           name: string
           position?: number | null
+          show_on_home?: boolean
           slug: string
         }
         Update: {
@@ -37,6 +39,7 @@ export type Database = {
           is_protected?: boolean
           name?: string
           position?: number | null
+          show_on_home?: boolean
           slug?: string
         }
         Relationships: []
@@ -190,6 +193,7 @@ export type Database = {
           created_at: string | null
           id: string
           is_published: boolean | null
+          show_on_home: boolean
           title: string
           updated_at: string | null
         }
@@ -200,6 +204,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_published?: boolean | null
+          show_on_home?: boolean
           title: string
           updated_at?: string | null
         }
@@ -210,6 +215,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_published?: boolean | null
+          show_on_home?: boolean
           title?: string
           updated_at?: string | null
         }
