@@ -4,10 +4,12 @@ export interface Post {
   id: string;
   title: string;
   cover_url: string | null;
-  cover_type: 'image' | 'video';
+  cover_type: 'image' | 'video' | null;
   author_persona: Persona;
   is_published: boolean;
   show_on_home: boolean;
+  story_date: string | null;
+  location: string | null;
   created_at: string;
   updated_at: string;
 }

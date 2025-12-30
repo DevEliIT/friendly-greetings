@@ -193,7 +193,9 @@ export type Database = {
           created_at: string | null
           id: string
           is_published: boolean | null
+          location: string | null
           show_on_home: boolean
+          story_date: string | null
           title: string
           updated_at: string | null
         }
@@ -204,7 +206,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_published?: boolean | null
+          location?: string | null
           show_on_home?: boolean
+          story_date?: string | null
           title: string
           updated_at?: string | null
         }
@@ -215,7 +219,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_published?: boolean | null
+          location?: string | null
           show_on_home?: boolean
+          story_date?: string | null
           title?: string
           updated_at?: string | null
         }
