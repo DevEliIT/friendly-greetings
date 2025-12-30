@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Loader2, Upload, X, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Upload, X, Plus, Trash2, CalendarIcon, MapPin } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -12,7 +14,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import type { Persona, PostMedia } from '@/types/blog';
 
 export default function PostForm() {
@@ -34,6 +39,8 @@ export default function PostForm() {
   const [contentHim, setContentHim] = useState('');
   const [contentHer, setContentHer] = useState('');
   const [media, setMedia] = useState<PostMedia[]>([]);
+  const [storyDate, setStoryDate] = useState<Date | undefined>();
+  const [location, setLocation] = useState('');
 
   useEffect(() => {
     if (isEditing) {
@@ -59,6 +66,8 @@ export default function PostForm() {
     setIsPublished(post.is_published || false);
     setCoverUrl(post.cover_url);
     setCoverType((post.cover_type as 'image' | 'video') || 'image');
+    setStoryDate(post.story_date ? new Date(post.story_date) : undefined);
+    setLocation(post.location || '');
 
     // Fetch versions
     const { data: versions } = await supabase
@@ -169,6 +178,8 @@ export default function PostForm() {
             is_published: isPublished,
             cover_url: coverUrl,
             cover_type: coverType,
+            story_date: storyDate ? format(storyDate, 'yyyy-MM-dd') : null,
+            location: location || null,
           })
           .eq('id', id);
 
@@ -182,6 +193,8 @@ export default function PostForm() {
             is_published: isPublished,
             cover_url: coverUrl,
             cover_type: coverType,
+            story_date: storyDate ? format(storyDate, 'yyyy-MM-dd') : null,
+            location: location || null,
           })
           .select()
           .single();
@@ -300,6 +313,50 @@ export default function PostForm() {
                     checked={isPublished}
                     onCheckedChange={setIsPublished}
                   />
+                </div>
+              </div>
+
+              {/* Story date and location */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Data da história</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !storyDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {storyDate ? format(storyDate, "d 'de' MMMM, yyyy", { locale: ptBR }) : 'Selecionar data'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={storyDate}
+                        onSelect={setStoryDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location">Local</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="location"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="Ex: Fortaleza, CE"
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>

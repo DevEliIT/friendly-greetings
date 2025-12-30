@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Palette, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -20,18 +20,35 @@ export default function Settings() {
   const [spotifyUrl, setSpotifyUrl] = useState('');
   const [storyHim, setStoryHim] = useState('');
   const [storyHer, setStoryHer] = useState('');
+  
+  // Names and colors
+  const [nameHim, setNameHim] = useState('');
+  const [nameHer, setNameHer] = useState('');
+  const [primaryHim, setPrimaryHim] = useState('#3b82f6');
+  const [secondaryHim, setSecondaryHim] = useState('#60a5fa');
+  const [primaryHer, setPrimaryHer] = useState('#ec4899');
+  const [secondaryHer, setSecondaryHer] = useState('#f472b6');
 
   useEffect(() => {
     async function fetchSettings() {
-      // Fetch Spotify URL
-      const { data: spotifyData } = await supabase
+      // Fetch all settings at once
+      const { data: settingsData } = await supabase
         .from('settings')
-        .select('value')
-        .eq('key', 'spotify_playlist_url')
-        .maybeSingle();
+        .select('key, value');
 
-      if (spotifyData) {
-        setSpotifyUrl(spotifyData.value || '');
+      if (settingsData) {
+        const settingsMap: Record<string, string> = {};
+        settingsData.forEach(item => {
+          settingsMap[item.key] = item.value || '';
+        });
+
+        setSpotifyUrl(settingsMap['spotify_playlist_url'] || '');
+        setNameHim(settingsMap['name_him'] || '');
+        setNameHer(settingsMap['name_her'] || '');
+        setPrimaryHim(settingsMap['primary_him'] || '#3b82f6');
+        setSecondaryHim(settingsMap['secondary_him'] || '#60a5fa');
+        setPrimaryHer(settingsMap['primary_her'] || '#ec4899');
+        setSecondaryHer(settingsMap['secondary_her'] || '#f472b6');
       }
 
       // Fetch Our Story page
@@ -52,29 +69,49 @@ export default function Settings() {
     fetchSettings();
   }, []);
 
-  async function saveSpotify() {
-    setSaving(true);
-
-    // Check if exists
+  async function saveSetting(key: string, value: string) {
     const { data: existing } = await supabase
       .from('settings')
       .select('id')
-      .eq('key', 'spotify_playlist_url')
+      .eq('key', key)
       .maybeSingle();
 
     if (existing) {
       await supabase
         .from('settings')
-        .update({ value: spotifyUrl })
-        .eq('key', 'spotify_playlist_url');
+        .update({ value })
+        .eq('key', key);
     } else {
       await supabase
         .from('settings')
-        .insert({ key: 'spotify_playlist_url', value: spotifyUrl });
+        .insert({ key, value });
     }
+  }
 
+  async function saveSpotify() {
+    setSaving(true);
+    await saveSetting('spotify_playlist_url', spotifyUrl);
     toast({ title: 'Playlist salva' });
     setSaving(false);
+  }
+
+  async function saveNamesAndColors() {
+    setSaving(true);
+    
+    await Promise.all([
+      saveSetting('name_him', nameHim),
+      saveSetting('name_her', nameHer),
+      saveSetting('primary_him', primaryHim),
+      saveSetting('secondary_him', secondaryHim),
+      saveSetting('primary_her', primaryHer),
+      saveSetting('secondary_her', secondaryHer),
+    ]);
+
+    toast({ title: 'Nomes e cores salvos' });
+    setSaving(false);
+    
+    // Reload page to apply new colors
+    window.location.reload();
   }
 
   async function saveStory() {
@@ -120,6 +157,128 @@ export default function Settings() {
 
       <AdminLayout title="Configurações">
         <div className="space-y-6">
+          {/* Names and Colors */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Nomes e Cores
+              </CardTitle>
+              <CardDescription>
+                Configure os nomes e a paleta de cores para ele e ela
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* Him section */}
+                <div className="space-y-4 rounded-lg border border-border p-4">
+                  <h3 className="font-semibold">Ele</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="nameHim">Nome</Label>
+                    <Input
+                      id="nameHim"
+                      value={nameHim}
+                      onChange={(e) => setNameHim(e.target.value)}
+                      placeholder="Nome dele"
+                    />
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="primaryHim">Cor primária</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="primaryHim"
+                          type="color"
+                          value={primaryHim}
+                          onChange={(e) => setPrimaryHim(e.target.value)}
+                          className="h-10 w-16 cursor-pointer p-1"
+                        />
+                        <Input
+                          value={primaryHim}
+                          onChange={(e) => setPrimaryHim(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="secondaryHim">Cor secundária</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="secondaryHim"
+                          type="color"
+                          value={secondaryHim}
+                          onChange={(e) => setSecondaryHim(e.target.value)}
+                          className="h-10 w-16 cursor-pointer p-1"
+                        />
+                        <Input
+                          value={secondaryHim}
+                          onChange={(e) => setSecondaryHim(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Her section */}
+                <div className="space-y-4 rounded-lg border border-border p-4">
+                  <h3 className="font-semibold">Ela</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="nameHer">Nome</Label>
+                    <Input
+                      id="nameHer"
+                      value={nameHer}
+                      onChange={(e) => setNameHer(e.target.value)}
+                      placeholder="Nome dela"
+                    />
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="primaryHer">Cor primária</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="primaryHer"
+                          type="color"
+                          value={primaryHer}
+                          onChange={(e) => setPrimaryHer(e.target.value)}
+                          className="h-10 w-16 cursor-pointer p-1"
+                        />
+                        <Input
+                          value={primaryHer}
+                          onChange={(e) => setPrimaryHer(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="secondaryHer">Cor secundária</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="secondaryHer"
+                          type="color"
+                          value={secondaryHer}
+                          onChange={(e) => setSecondaryHer(e.target.value)}
+                          className="h-10 w-16 cursor-pointer p-1"
+                        />
+                        <Input
+                          value={secondaryHer}
+                          onChange={(e) => setSecondaryHer(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Button onClick={saveNamesAndColors} disabled={saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Save className="mr-2 h-4 w-4" />
+                Salvar nomes e cores
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Spotify */}
           <Card>
             <CardHeader>
