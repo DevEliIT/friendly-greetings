@@ -32,6 +32,12 @@
     --sidebar-accent-foreground: 20 20% 25%;
     --sidebar-border: 30 15% 85%;
     --sidebar-ring: 20 40% 45%;
+    
+    /* Couple colors - customizable via settings */
+    --color-him: 220 70% 50%;
+    --color-him-secondary: 220 60% 70%;
+    --color-her: 340 80% 55%;
+    --color-her-secondary: 340 70% 75%;
   }
 
   .dark {
@@ -62,6 +68,12 @@
     --sidebar-accent-foreground: 30 20% 88%;
     --sidebar-border: 20 12% 22%;
     --sidebar-ring: 25 45% 60%;
+    
+    /* Dark mode couple colors - fixed for readability */
+    --color-him: 210 80% 65%;
+    --color-him-secondary: 210 70% 75%;
+    --color-her: 330 80% 70%;
+    --color-her-secondary: 330 70% 80%;
   }
 }
 

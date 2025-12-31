@@ -1,21 +1,20 @@
 import { cn } from '@/lib/utils';
 import { Persona } from '@/types/blog';
+import { useTheme } from '@/hooks/useTheme';
 
 interface PersonaToggleProps {
   activePersona: Persona;
   onPersonaChange: (persona: Persona) => void;
-  himLabel?: string;
-  herLabel?: string;
   className?: string;
 }
 
 export function PersonaToggle({ 
   activePersona, 
   onPersonaChange, 
-  himLabel = "A versão dele",
-  herLabel = "A versão dela",
   className 
 }: PersonaToggleProps) {
+  const { couple } = useTheme();
+  
   return (
     <div className={cn("flex rounded-lg bg-muted p-1", className)}>
       <button
@@ -23,22 +22,22 @@ export function PersonaToggle({
         className={cn(
           "flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all duration-200",
           activePersona === 'him'
-            ? "bg-background text-foreground shadow-sm"
+            ? "bg-background text-him shadow-sm"
             : "text-muted-foreground hover:text-foreground"
         )}
       >
-        {himLabel}
+        A versão de {couple.nameHim}
       </button>
       <button
         onClick={() => onPersonaChange('her')}
         className={cn(
           "flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all duration-200",
           activePersona === 'her'
-            ? "bg-background text-foreground shadow-sm"
+            ? "bg-background text-her shadow-sm"
             : "text-muted-foreground hover:text-foreground"
         )}
       >
-        {herLabel}
+        A versão de {couple.nameHer}
       </button>
     </div>
   );

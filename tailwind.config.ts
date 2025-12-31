@@ -57,6 +57,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        him: {
+          DEFAULT: "hsl(var(--color-him))",
+          secondary: "hsl(var(--color-him-secondary))",
+        },
+        her: {
+          DEFAULT: "hsl(var(--color-her))",
+          secondary: "hsl(var(--color-her-secondary))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
