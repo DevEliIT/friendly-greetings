@@ -3,11 +3,10 @@ import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowLeft, User, Calendar, Play, Pause, Volume2 } from 'lucide-react';
+import { ArrowLeft, User, Calendar, MapPin, Volume2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Post, PostVersion, PostMedia, Persona } from '@/types/blog';
-// import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { PersonaToggle } from '@/components/ui/PersonaToggle';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -48,79 +47,81 @@ export default function Story() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen flex-col">
-        {/* <Header /> */}
-        <main className="flex-1">
-          <div className="container mx-auto max-w-4xl px-4 py-12">
-            <Skeleton className="mb-8 h-8 w-32" />
-            <Skeleton className="mb-4 h-12 w-3/4" />
-            <Skeleton className="mb-8 h-6 w-48" />
-            <Skeleton className="aspect-video w-full rounded-xl" />
-          </div>
-        </main>
-        <Footer />
-      </div>
+      <MainLayout>
+        <Helmet>
+          <title>Carregando... - Nós Dois</title>
+        </Helmet>
+        <div className="container mx-auto max-w-4xl px-4 py-12">
+          <Skeleton className="mb-8 h-8 w-32" />
+          <Skeleton className="mb-4 h-12 w-3/4" />
+          <Skeleton className="mb-8 h-6 w-48" />
+          <Skeleton className="aspect-video w-full rounded-xl" />
+        </div>
+      </MainLayout>
     );
   }
 
   if (!post) {
     return (
-      <div className="flex min-h-screen flex-col">
-        {/* <Header /> */}
-        <main className="flex-1">
-          <div className="container mx-auto max-w-4xl px-4 py-24 text-center">
-            <h1 className="font-display text-3xl font-semibold">História não encontrada</h1>
-            <p className="mt-4 text-muted-foreground">Esta história não existe ou não foi publicada.</p>
-            <Link to="/">
-              <Button variant="outline" className="mt-8">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar ao início
-              </Button>
-            </Link>
-          </div>
-        </main>
-        <Footer />
-      </div>
+      <MainLayout>
+        <Helmet>
+          <title>Não encontrada - Nós Dois</title>
+        </Helmet>
+        <div className="container mx-auto max-w-4xl px-4 py-24 text-center">
+          <h1 className="font-display text-3xl font-semibold">História não encontrada</h1>
+          <p className="mt-4 text-muted-foreground">Esta história não existe ou não foi publicada.</p>
+          <Link to="/">
+            <Button variant="outline" className="mt-8">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar ao início
+            </Button>
+          </Link>
+        </div>
+      </MainLayout>
     );
   }
 
   return (
-    <>
+    <MainLayout>
       <Helmet>
         <title>{post.title} - Nós Dois</title>
         <meta name="description" content={`${post.title} - Uma história contada por ${post.author_persona === 'him' ? 'ele' : 'ela'}`} />
       </Helmet>
 
-      <div className="flex min-h-screen flex-col">
-        {/* <Header /> */}
+      <article className="container mx-auto max-w-4xl px-4 py-12">
+        {/* Back button */}
+        <Link 
+          to="/noticias" 
+          className="mb-8 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar às notícias
+        </Link>
 
-        <main className="flex-1">
-          <article className="container mx-auto max-w-4xl px-4 py-12">
-            {/* Back button */}
-            <Link 
-              to="/" 
-              className="mb-8 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar às notícias
-            </Link>
-
-            {/* Title and meta */}
-            <header className="mb-8">
-              <h1 className="font-display text-3xl font-semibold leading-tight md:text-4xl lg:text-5xl">
-                {post.title}
-              </h1>
-              <div className="mt-4 flex flex-wrap items-center gap-4 text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <span>{format(new Date(post.created_at), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span>Cadastrado por {post.author_persona === 'him' ? 'ele' : 'ela'}</span>
-                </div>
+        {/* Title and meta */}
+        <header className="mb-8">
+          <h1 className="font-display text-3xl font-semibold leading-tight md:text-4xl lg:text-5xl">
+            {post.title}
+          </h1>
+          <div className="mt-4 flex flex-wrap items-center gap-4 text-muted-foreground">
+            {post.story_date && (
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>{format(new Date(post.story_date), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
               </div>
-            </header>
+            )}
+            {post.location && (
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                <span>{post.location}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span>Cadastrado por {post.author_persona === 'him' ? 'ele' : 'ela'}</span>
+            </div>
+          </div>
+        </header>
 
             {/* Cover */}
             {post.cover_url && (
@@ -223,14 +224,10 @@ export default function Story() {
                       </div>
                     ))}
                   </div>
-                )}
-              </section>
             )}
-          </article>
-        </main>
-
-        <Footer />
-      </div>
-    </>
+          </section>
+        )}
+      </article>
+    </MainLayout>
   );
 }
