@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Loader2, Save, Palette, User } from 'lucide-react';
+import { Loader2, Save, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,66 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+
+// Helper functions to convert between HEX and HSL
+function hexToHsl(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return '0 0% 50%';
+  
+  let r = parseInt(result[1], 16) / 255;
+  let g = parseInt(result[2], 16) / 255;
+  let b = parseInt(result[3], 16) / 255;
+  
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+function hslToHex(hsl: string): string {
+  const parts = hsl.match(/(\d+)\s+(\d+)%\s+(\d+)%/);
+  if (!parts) return '#3b82f6';
+  
+  const h = parseInt(parts[1]) / 360;
+  const s = parseInt(parts[2]) / 100;
+  const l = parseInt(parts[3]) / 100;
+  
+  let r, g, b;
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const hue2rgb = (p: number, q: number, t: number) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  
+  const toHex = (x: number) => {
+    const hex = Math.round(x * 255).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  };
+  
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
 
 export default function Settings() {
   const [loading, setLoading] = useState(true);
@@ -21,17 +81,16 @@ export default function Settings() {
   const [storyHim, setStoryHim] = useState('');
   const [storyHer, setStoryHer] = useState('');
   
-  // Names and colors
+  // Names and colors (stored as HEX for color picker, converted to HSL for saving)
   const [nameHim, setNameHim] = useState('');
   const [nameHer, setNameHer] = useState('');
-  const [primaryHim, setPrimaryHim] = useState('#3b82f6');
-  const [secondaryHim, setSecondaryHim] = useState('#60a5fa');
-  const [primaryHer, setPrimaryHer] = useState('#ec4899');
-  const [secondaryHer, setSecondaryHer] = useState('#f472b6');
+  const [primaryHimHex, setPrimaryHimHex] = useState('#3b82f6');
+  const [secondaryHimHex, setSecondaryHimHex] = useState('#60a5fa');
+  const [primaryHerHex, setPrimaryHerHex] = useState('#ec4899');
+  const [secondaryHerHex, setSecondaryHerHex] = useState('#f472b6');
 
   useEffect(() => {
     async function fetchSettings() {
-      // Fetch all settings at once
       const { data: settingsData } = await supabase
         .from('settings')
         .select('key, value');
@@ -45,13 +104,14 @@ export default function Settings() {
         setSpotifyUrl(settingsMap['spotify_playlist_url'] || '');
         setNameHim(settingsMap['name_him'] || '');
         setNameHer(settingsMap['name_her'] || '');
-        setPrimaryHim(settingsMap['primary_him'] || '#3b82f6');
-        setSecondaryHim(settingsMap['secondary_him'] || '#60a5fa');
-        setPrimaryHer(settingsMap['primary_her'] || '#ec4899');
-        setSecondaryHer(settingsMap['secondary_her'] || '#f472b6');
+        
+        // Convert stored HSL to HEX for color picker
+        if (settingsMap['primary_him']) setPrimaryHimHex(hslToHex(settingsMap['primary_him']));
+        if (settingsMap['secondary_him']) setSecondaryHimHex(hslToHex(settingsMap['secondary_him']));
+        if (settingsMap['primary_her']) setPrimaryHerHex(hslToHex(settingsMap['primary_her']));
+        if (settingsMap['secondary_her']) setSecondaryHerHex(hslToHex(settingsMap['secondary_her']));
       }
 
-      // Fetch Our Story page
       const { data: pageData } = await supabase
         .from('pages')
         .select('content_him, content_her')
@@ -98,13 +158,14 @@ export default function Settings() {
   async function saveNamesAndColors() {
     setSaving(true);
     
+    // Convert HEX to HSL before saving
     await Promise.all([
       saveSetting('name_him', nameHim),
       saveSetting('name_her', nameHer),
-      saveSetting('primary_him', primaryHim),
-      saveSetting('secondary_him', secondaryHim),
-      saveSetting('primary_her', primaryHer),
-      saveSetting('secondary_her', secondaryHer),
+      saveSetting('primary_him', hexToHsl(primaryHimHex)),
+      saveSetting('secondary_him', hexToHsl(secondaryHimHex)),
+      saveSetting('primary_her', hexToHsl(primaryHerHex)),
+      saveSetting('secondary_her', hexToHsl(secondaryHerHex)),
     ]);
 
     toast({ title: 'Nomes e cores salvos' });
@@ -172,7 +233,7 @@ export default function Settings() {
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Him section */}
                 <div className="space-y-4 rounded-lg border border-border p-4">
-                  <h3 className="font-semibold">Ele</h3>
+                  <h3 className="font-semibold text-him">Ele</h3>
                   <div className="space-y-2">
                     <Label htmlFor="nameHim">Nome</Label>
                     <Input
@@ -189,13 +250,13 @@ export default function Settings() {
                         <Input
                           id="primaryHim"
                           type="color"
-                          value={primaryHim}
-                          onChange={(e) => setPrimaryHim(e.target.value)}
+                          value={primaryHimHex}
+                          onChange={(e) => setPrimaryHimHex(e.target.value)}
                           className="h-10 w-16 cursor-pointer p-1"
                         />
                         <Input
-                          value={primaryHim}
-                          onChange={(e) => setPrimaryHim(e.target.value)}
+                          value={primaryHimHex}
+                          onChange={(e) => setPrimaryHimHex(e.target.value)}
                           className="flex-1"
                         />
                       </div>
@@ -206,23 +267,34 @@ export default function Settings() {
                         <Input
                           id="secondaryHim"
                           type="color"
-                          value={secondaryHim}
-                          onChange={(e) => setSecondaryHim(e.target.value)}
+                          value={secondaryHimHex}
+                          onChange={(e) => setSecondaryHimHex(e.target.value)}
                           className="h-10 w-16 cursor-pointer p-1"
                         />
                         <Input
-                          value={secondaryHim}
-                          onChange={(e) => setSecondaryHim(e.target.value)}
+                          value={secondaryHimHex}
+                          onChange={(e) => setSecondaryHimHex(e.target.value)}
                           className="flex-1"
                         />
                       </div>
                     </div>
                   </div>
+                  {/* Preview */}
+                  <div className="mt-4 flex gap-2">
+                    <div 
+                      className="h-8 flex-1 rounded" 
+                      style={{ backgroundColor: primaryHimHex }}
+                    />
+                    <div 
+                      className="h-8 flex-1 rounded" 
+                      style={{ backgroundColor: secondaryHimHex }}
+                    />
+                  </div>
                 </div>
 
                 {/* Her section */}
                 <div className="space-y-4 rounded-lg border border-border p-4">
-                  <h3 className="font-semibold">Ela</h3>
+                  <h3 className="font-semibold text-her">Ela</h3>
                   <div className="space-y-2">
                     <Label htmlFor="nameHer">Nome</Label>
                     <Input
@@ -239,13 +311,13 @@ export default function Settings() {
                         <Input
                           id="primaryHer"
                           type="color"
-                          value={primaryHer}
-                          onChange={(e) => setPrimaryHer(e.target.value)}
+                          value={primaryHerHex}
+                          onChange={(e) => setPrimaryHerHex(e.target.value)}
                           className="h-10 w-16 cursor-pointer p-1"
                         />
                         <Input
-                          value={primaryHer}
-                          onChange={(e) => setPrimaryHer(e.target.value)}
+                          value={primaryHerHex}
+                          onChange={(e) => setPrimaryHerHex(e.target.value)}
                           className="flex-1"
                         />
                       </div>
@@ -256,17 +328,28 @@ export default function Settings() {
                         <Input
                           id="secondaryHer"
                           type="color"
-                          value={secondaryHer}
-                          onChange={(e) => setSecondaryHer(e.target.value)}
+                          value={secondaryHerHex}
+                          onChange={(e) => setSecondaryHerHex(e.target.value)}
                           className="h-10 w-16 cursor-pointer p-1"
                         />
                         <Input
-                          value={secondaryHer}
-                          onChange={(e) => setSecondaryHer(e.target.value)}
+                          value={secondaryHerHex}
+                          onChange={(e) => setSecondaryHerHex(e.target.value)}
                           className="flex-1"
                         />
                       </div>
                     </div>
+                  </div>
+                  {/* Preview */}
+                  <div className="mt-4 flex gap-2">
+                    <div 
+                      className="h-8 flex-1 rounded" 
+                      style={{ backgroundColor: primaryHerHex }}
+                    />
+                    <div 
+                      className="h-8 flex-1 rounded" 
+                      style={{ backgroundColor: secondaryHerHex }}
+                    />
                   </div>
                 </div>
               </div>

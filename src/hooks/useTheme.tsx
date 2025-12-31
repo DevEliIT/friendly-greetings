@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 type Theme = 'light' | 'dark';
 
-interface ThemeColors {
+interface CoupleInfo {
   primaryHim: string;
   secondaryHim: string;
   primaryHer: string;
@@ -15,11 +15,11 @@ interface ThemeColors {
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  colors: ThemeColors;
+  couple: CoupleInfo;
   isLoading: boolean;
 }
 
-const defaultColors: ThemeColors = {
+const defaultCouple: CoupleInfo = {
   primaryHim: '220 70% 50%',
   secondaryHim: '220 60% 70%',
   primaryHer: '340 80% 55%',
@@ -39,11 +39,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return 'light';
   });
 
-  const [colors, setColors] = useState<ThemeColors>(defaultColors);
+  const [couple, setCouple] = useState<CoupleInfo>(defaultCouple);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchColors() {
+    async function fetchSettings() {
       const keys = [
         'primary_him', 'secondary_him', 'primary_her', 'secondary_her',
         'name_him', 'name_her'
@@ -55,27 +55,28 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         .in('key', keys);
 
       if (data) {
-        const colorsMap: Record<string, string> = {};
+        const settingsMap: Record<string, string> = {};
         data.forEach(item => {
-          colorsMap[item.key] = item.value || '';
+          settingsMap[item.key] = item.value || '';
         });
 
-        setColors({
-          primaryHim: colorsMap['primary_him'] || defaultColors.primaryHim,
-          secondaryHim: colorsMap['secondary_him'] || defaultColors.secondaryHim,
-          primaryHer: colorsMap['primary_her'] || defaultColors.primaryHer,
-          secondaryHer: colorsMap['secondary_her'] || defaultColors.secondaryHer,
-          nameHim: colorsMap['name_him'] || defaultColors.nameHim,
-          nameHer: colorsMap['name_her'] || defaultColors.nameHer,
+        setCouple({
+          primaryHim: settingsMap['primary_him'] || defaultCouple.primaryHim,
+          secondaryHim: settingsMap['secondary_him'] || defaultCouple.secondaryHim,
+          primaryHer: settingsMap['primary_her'] || defaultCouple.primaryHer,
+          secondaryHer: settingsMap['secondary_her'] || defaultCouple.secondaryHer,
+          nameHim: settingsMap['name_him'] || defaultCouple.nameHim,
+          nameHer: settingsMap['name_her'] || defaultCouple.nameHer,
         });
       }
 
       setIsLoading(false);
     }
 
-    fetchColors();
+    fetchSettings();
   }, []);
 
+  // Apply theme class
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
@@ -83,20 +84,32 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Apply custom colors as CSS variables (only in light mode)
+  // Apply custom couple colors as CSS variables (only in light mode)
   useEffect(() => {
-    if (theme === 'light' && !isLoading) {
+    if (!isLoading) {
       const root = window.document.documentElement;
-      // We'll apply persona-specific colors when needed
+      
+      if (theme === 'light') {
+        root.style.setProperty('--color-him', couple.primaryHim);
+        root.style.setProperty('--color-him-secondary', couple.secondaryHim);
+        root.style.setProperty('--color-her', couple.primaryHer);
+        root.style.setProperty('--color-her-secondary', couple.secondaryHer);
+      } else {
+        // Dark mode uses fixed colors for better readability
+        root.style.removeProperty('--color-him');
+        root.style.removeProperty('--color-him-secondary');
+        root.style.removeProperty('--color-her');
+        root.style.removeProperty('--color-her-secondary');
+      }
     }
-  }, [theme, colors, isLoading]);
+  }, [theme, couple, isLoading]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, colors, isLoading }}>
+    <ThemeContext.Provider value={{ theme, setTheme, couple, isLoading }}>
       {children}
     </ThemeContext.Provider>
   );

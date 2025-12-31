@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Heart, LayoutDashboard, FileText, Image, Settings, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { cn } from '@/lib/utils';
 
 interface AdminLayoutProps {
@@ -30,13 +31,16 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-background">
       {/* Desktop Sidebar */}
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r border-border bg-white md:block">
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r border-border bg-sidebar-background md:block">
         <div className="flex h-full flex-col">
-          <div className="flex items-center gap-2 border-b border-border px-6 py-4">
-            <Heart className="h-6 w-6 text-accent" fill="currentColor" />
-            <span className="font-display text-lg font-semibold">Admin</span>
+          <div className="flex items-center justify-between border-b border-border px-6 py-4">
+            <div className="flex items-center gap-2">
+              <Heart className="h-6 w-6 text-accent" fill="currentColor" />
+              <span className="font-display text-lg font-semibold text-sidebar-foreground">Admin</span>
+            </div>
+            <ThemeToggle />
           </div>
 
           <nav className="flex-1 space-y-1 p-4">
@@ -100,7 +104,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       {/* Mobile Sidebar */}
       <aside 
         className={cn(
-          'fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 transform border-r border-border bg-white transition-transform md:hidden',
+          'fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 transform border-r border-border bg-sidebar-background transition-transform md:hidden',
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >

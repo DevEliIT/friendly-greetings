@@ -23,7 +23,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, isLoading, signOut } = useAuth();
-  const { colors } = useTheme();
+  const { couple } = useTheme();
 
   // Redirect to login if not authenticated
   if (!isLoading && !user) {
@@ -46,7 +46,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <Link to="/" className="flex items-center gap-2 border-b border-border px-6 py-5">
             <Heart className="h-6 w-6 text-accent" fill="currentColor" />
             <span className="font-display text-xl font-semibold tracking-wide">
-              {colors.nameHim} & {colors.nameHer}
+              <span className="text-him">{couple.nameHim}</span> & <span className="text-her">{couple.nameHer}</span>
             </span>
           </Link>
 
@@ -90,7 +90,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-background px-4 md:hidden">
         <Link to="/" className="flex items-center gap-2">
           <Heart className="h-5 w-5 text-accent" fill="currentColor" />
-          <span className="font-display text-lg font-semibold">{colors.nameHim} & {colors.nameHer}</span>
+          <span className="font-display text-lg font-semibold"><span className="text-him">{couple.nameHim}</span> & <span className="text-her">{couple.nameHer}</span></span>
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
