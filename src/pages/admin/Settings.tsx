@@ -78,6 +78,12 @@ interface UserPersona {
   email?: string;
 }
 
+interface AuthUser {
+  id: string;
+  email: string;
+  created_at: string;
+}
+
 export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -99,9 +105,11 @@ export default function Settings() {
 
   // User personas
   const [userPersonas, setUserPersonas] = useState<UserPersona[]>([]);
-  const [newUserEmail, setNewUserEmail] = useState('');
+  const [authUsers, setAuthUsers] = useState<AuthUser[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
   const [newUserPersona, setNewUserPersona] = useState<'him' | 'her'>('him');
   const [savingPersona, setSavingPersona] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   useEffect(() => {
     async function fetchSettings() {
@@ -146,6 +154,25 @@ export default function Settings() {
         setUserPersonas(personasData as UserPersona[]);
       }
 
+      // Fetch auth users from edge function
+      setLoadingUsers(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          const response = await supabase.functions.invoke('list-users', {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          });
+          if (response.data?.users) {
+            setAuthUsers(response.data.users);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch users:', err);
+      }
+      setLoadingUsers(false);
+
       setLoading(false);
     }
 
@@ -153,8 +180,8 @@ export default function Settings() {
   }, []);
 
   async function saveUserPersona() {
-    if (!newUserEmail) {
-      toast({ title: 'Informe o ID do usuário', variant: 'destructive' });
+    if (!selectedUserId) {
+      toast({ title: 'Selecione um usuário', variant: 'destructive' });
       return;
     }
 
@@ -164,18 +191,18 @@ export default function Settings() {
     const { data: existing } = await supabase
       .from('user_personas')
       .select('id')
-      .eq('user_id', newUserEmail)
+      .eq('user_id', selectedUserId)
       .maybeSingle();
 
     if (existing) {
       await supabase
         .from('user_personas')
         .update({ persona: newUserPersona })
-        .eq('user_id', newUserEmail);
+        .eq('user_id', selectedUserId);
     } else {
       const { error } = await supabase
         .from('user_personas')
-        .insert({ user_id: newUserEmail, persona: newUserPersona });
+        .insert({ user_id: selectedUserId, persona: newUserPersona });
 
       if (error) {
         toast({ title: 'Erro ao associar usuário', description: error.message, variant: 'destructive' });
@@ -193,7 +220,7 @@ export default function Settings() {
       setUserPersonas(personasData as UserPersona[]);
     }
 
-    setNewUserEmail('');
+    setSelectedUserId('');
     toast({ title: 'Associação salva' });
     setSavingPersona(false);
   }
@@ -326,13 +353,28 @@ export default function Settings() {
             <CardContent className="space-y-4">
               <div className="flex flex-wrap gap-4">
                 <div className="flex-1 min-w-[200px]">
-                  <Label htmlFor="userId">ID do Usuário (UUID)</Label>
-                  <Input
-                    id="userId"
-                    value={newUserEmail}
-                    onChange={(e) => setNewUserEmail(e.target.value)}
-                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                  />
+                  <Label htmlFor="userId">Usuário</Label>
+                  {loadingUsers ? (
+                    <div className="flex items-center gap-2 py-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm text-muted-foreground">Carregando usuários...</span>
+                    </div>
+                  ) : (
+                    <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um usuário" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {authUsers
+                          .filter(u => !userPersonas.find(p => p.user_id === u.id))
+                          .map(user => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.email}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div className="w-32">
                   <Label>Persona</Label>
@@ -347,7 +389,7 @@ export default function Settings() {
                   </Select>
                 </div>
                 <div className="flex items-end">
-                  <Button onClick={saveUserPersona} disabled={savingPersona}>
+                  <Button onClick={saveUserPersona} disabled={savingPersona || !selectedUserId}>
                     {savingPersona && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Associar
                   </Button>
@@ -358,19 +400,22 @@ export default function Settings() {
                 <div className="mt-4 space-y-2">
                   <h4 className="text-sm font-medium">Usuários associados:</h4>
                   <div className="space-y-2">
-                    {userPersonas.map(up => (
-                      <div key={up.user_id} className="flex items-center justify-between rounded-lg border border-border p-3">
-                        <div>
-                          <code className="text-xs text-muted-foreground">{up.user_id}</code>
-                          <span className={`ml-2 text-sm font-medium ${up.persona === 'him' ? 'text-him' : 'text-her'}`}>
-                            {up.persona === 'him' ? (nameHim || 'Ele') : (nameHer || 'Ela')}
-                          </span>
+                    {userPersonas.map(up => {
+                      const userEmail = authUsers.find(u => u.id === up.user_id)?.email || up.user_id;
+                      return (
+                        <div key={up.user_id} className="flex items-center justify-between rounded-lg border border-border p-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{userEmail}</span>
+                            <span className={`text-sm font-medium ${up.persona === 'him' ? 'text-him' : 'text-her'}`}>
+                              ({up.persona === 'him' ? (nameHim || 'Ele') : (nameHer || 'Ela')})
+                            </span>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => removeUserPersona(up.user_id)}>
+                            Remover
+                          </Button>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => removeUserPersona(up.user_id)}>
-                          Remover
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
