@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Loader2, Save, User } from 'lucide-react';
+import { Loader2, Save, User, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-
+import { useTheme } from '@/hooks/useTheme';
 // Helper functions to convert between HEX and HSL
 function hexToHsl(hex: string): string {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -71,10 +72,17 @@ function hslToHex(hsl: string): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+interface UserPersona {
+  user_id: string;
+  persona: 'him' | 'her';
+  email?: string;
+}
+
 export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const { couple, currentUser } = useTheme();
 
   // Settings state
   const [spotifyUrl, setSpotifyUrl] = useState('');
@@ -88,6 +96,12 @@ export default function Settings() {
   const [secondaryHimHex, setSecondaryHimHex] = useState('#60a5fa');
   const [primaryHerHex, setPrimaryHerHex] = useState('#ec4899');
   const [secondaryHerHex, setSecondaryHerHex] = useState('#f472b6');
+
+  // User personas
+  const [userPersonas, setUserPersonas] = useState<UserPersona[]>([]);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPersona, setNewUserPersona] = useState<'him' | 'her'>('him');
+  const [savingPersona, setSavingPersona] = useState(false);
 
   useEffect(() => {
     async function fetchSettings() {
@@ -123,11 +137,76 @@ export default function Settings() {
         setStoryHer(pageData.content_her || '');
       }
 
+      // Fetch user personas
+      const { data: personasData } = await supabase
+        .from('user_personas')
+        .select('user_id, persona');
+
+      if (personasData) {
+        setUserPersonas(personasData as UserPersona[]);
+      }
+
       setLoading(false);
     }
 
     fetchSettings();
   }, []);
+
+  async function saveUserPersona() {
+    if (!newUserEmail) {
+      toast({ title: 'Informe o ID do usuário', variant: 'destructive' });
+      return;
+    }
+
+    setSavingPersona(true);
+
+    // Check if persona already exists
+    const { data: existing } = await supabase
+      .from('user_personas')
+      .select('id')
+      .eq('user_id', newUserEmail)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from('user_personas')
+        .update({ persona: newUserPersona })
+        .eq('user_id', newUserEmail);
+    } else {
+      const { error } = await supabase
+        .from('user_personas')
+        .insert({ user_id: newUserEmail, persona: newUserPersona });
+
+      if (error) {
+        toast({ title: 'Erro ao associar usuário', description: error.message, variant: 'destructive' });
+        setSavingPersona(false);
+        return;
+      }
+    }
+
+    // Refresh list
+    const { data: personasData } = await supabase
+      .from('user_personas')
+      .select('user_id, persona');
+
+    if (personasData) {
+      setUserPersonas(personasData as UserPersona[]);
+    }
+
+    setNewUserEmail('');
+    toast({ title: 'Associação salva' });
+    setSavingPersona(false);
+  }
+
+  async function removeUserPersona(userId: string) {
+    await supabase
+      .from('user_personas')
+      .delete()
+      .eq('user_id', userId);
+
+    setUserPersonas(prev => prev.filter(p => p.user_id !== userId));
+    toast({ title: 'Associação removida' });
+  }
 
   async function saveSetting(key: string, value: string) {
     const { data: existing } = await supabase
@@ -218,6 +297,86 @@ export default function Settings() {
 
       <AdminLayout title="Configurações">
         <div className="space-y-6">
+          {/* Current User Info */}
+          {currentUser && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Usuário Logado</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Você está logado como: <strong className="text-primary">{currentUser.name || 'Sem persona definida'}</strong>
+                  {currentUser.persona && <span className="ml-2 text-xs">({currentUser.persona === 'him' ? 'Ele' : 'Ela'})</span>}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* User Personas Association */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserPlus className="h-5 w-5" />
+                Associação de Usuários
+              </CardTitle>
+              <CardDescription>
+                Associe usuários às personas (Ele/Ela) para aplicar cores personalizadas
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-4">
+                <div className="flex-1 min-w-[200px]">
+                  <Label htmlFor="userId">ID do Usuário (UUID)</Label>
+                  <Input
+                    id="userId"
+                    value={newUserEmail}
+                    onChange={(e) => setNewUserEmail(e.target.value)}
+                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  />
+                </div>
+                <div className="w-32">
+                  <Label>Persona</Label>
+                  <Select value={newUserPersona} onValueChange={(v) => setNewUserPersona(v as 'him' | 'her')}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="him">{nameHim || 'Ele'}</SelectItem>
+                      <SelectItem value="her">{nameHer || 'Ela'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end">
+                  <Button onClick={saveUserPersona} disabled={savingPersona}>
+                    {savingPersona && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Associar
+                  </Button>
+                </div>
+              </div>
+
+              {userPersonas.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h4 className="text-sm font-medium">Usuários associados:</h4>
+                  <div className="space-y-2">
+                    {userPersonas.map(up => (
+                      <div key={up.user_id} className="flex items-center justify-between rounded-lg border border-border p-3">
+                        <div>
+                          <code className="text-xs text-muted-foreground">{up.user_id}</code>
+                          <span className={`ml-2 text-sm font-medium ${up.persona === 'him' ? 'text-him' : 'text-her'}`}>
+                            {up.persona === 'him' ? (nameHim || 'Ele') : (nameHer || 'Ela')}
+                          </span>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => removeUserPersona(up.user_id)}>
+                          Remover
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Names and Colors */}
           <Card>
             <CardHeader>
