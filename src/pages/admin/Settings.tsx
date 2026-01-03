@@ -95,21 +95,21 @@ export default function Settings() {
   const [storyHim, setStoryHim] = useState('');
   const [storyHer, setStoryHer] = useState('');
   
-  // Names and colors (stored as HEX for color picker, converted to HSL for saving)
-  const [nameHim, setNameHim] = useState('');
-  const [nameHer, setNameHer] = useState('');
-  const [primaryHimHex, setPrimaryHimHex] = useState('#3b82f6');
-  const [secondaryHimHex, setSecondaryHimHex] = useState('#60a5fa');
-  const [primaryHerHex, setPrimaryHerHex] = useState('#ec4899');
-  const [secondaryHerHex, setSecondaryHerHex] = useState('#f472b6');
+  // Current user's name and colors (stored as HEX for color picker)
+  const [myName, setMyName] = useState('');
+  const [myPrimaryHex, setMyPrimaryHex] = useState('#3b82f6');
+  const [mySecondaryHex, setMySecondaryHex] = useState('#60a5fa');
 
-  // User personas
+  // User personas (for association management)
   const [userPersonas, setUserPersonas] = useState<UserPersona[]>([]);
   const [authUsers, setAuthUsers] = useState<AuthUser[]>([]);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [newUserPersona, setNewUserPersona] = useState<'him' | 'her'>('him');
   const [savingPersona, setSavingPersona] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Get the persona suffix for current user's settings
+  const personaSuffix = currentUser?.persona === 'him' ? 'him' : 'her';
 
   useEffect(() => {
     async function fetchSettings() {
@@ -124,14 +124,14 @@ export default function Settings() {
         });
 
         setSpotifyUrl(settingsMap['spotify_playlist_url'] || '');
-        setNameHim(settingsMap['name_him'] || '');
-        setNameHer(settingsMap['name_her'] || '');
         
-        // Convert stored HSL to HEX for color picker
-        if (settingsMap['primary_him']) setPrimaryHimHex(hslToHex(settingsMap['primary_him']));
-        if (settingsMap['secondary_him']) setSecondaryHimHex(hslToHex(settingsMap['secondary_him']));
-        if (settingsMap['primary_her']) setPrimaryHerHex(hslToHex(settingsMap['primary_her']));
-        if (settingsMap['secondary_her']) setSecondaryHerHex(hslToHex(settingsMap['secondary_her']));
+        // Load current user's settings based on their persona
+        if (currentUser?.persona) {
+          const suffix = currentUser.persona === 'him' ? 'him' : 'her';
+          setMyName(settingsMap[`name_${suffix}`] || '');
+          if (settingsMap[`primary_${suffix}`]) setMyPrimaryHex(hslToHex(settingsMap[`primary_${suffix}`]));
+          if (settingsMap[`secondary_${suffix}`]) setMySecondaryHex(hslToHex(settingsMap[`secondary_${suffix}`]));
+        }
       }
 
       const { data: pageData } = await supabase
@@ -177,7 +177,7 @@ export default function Settings() {
     }
 
     fetchSettings();
-  }, []);
+  }, [currentUser?.persona]);
 
   async function saveUserPersona() {
     if (!selectedUserId) {
@@ -261,20 +261,24 @@ export default function Settings() {
     setSaving(false);
   }
 
-  async function saveNamesAndColors() {
+  async function saveMySettings() {
+    if (!currentUser?.persona) {
+      toast({ title: 'Você precisa ter uma persona associada', variant: 'destructive' });
+      return;
+    }
+
     setSaving(true);
     
-    // Convert HEX to HSL before saving
+    const suffix = currentUser.persona === 'him' ? 'him' : 'her';
+    
+    // Convert HEX to HSL before saving - only save current user's settings
     await Promise.all([
-      saveSetting('name_him', nameHim),
-      saveSetting('name_her', nameHer),
-      saveSetting('primary_him', hexToHsl(primaryHimHex)),
-      saveSetting('secondary_him', hexToHsl(secondaryHimHex)),
-      saveSetting('primary_her', hexToHsl(primaryHerHex)),
-      saveSetting('secondary_her', hexToHsl(secondaryHerHex)),
+      saveSetting(`name_${suffix}`, myName),
+      saveSetting(`primary_${suffix}`, hexToHsl(myPrimaryHex)),
+      saveSetting(`secondary_${suffix}`, hexToHsl(mySecondaryHex)),
     ]);
 
-    toast({ title: 'Nomes e cores salvos' });
+    toast({ title: 'Suas configurações foram salvas' });
     setSaving(false);
     
     // Reload page to apply new colors
@@ -383,8 +387,8 @@ export default function Settings() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="him">{nameHim || 'Ele'}</SelectItem>
-                      <SelectItem value="her">{nameHer || 'Ela'}</SelectItem>
+                      <SelectItem value="him">{couple.nameHim || 'Ele'}</SelectItem>
+                      <SelectItem value="her">{couple.nameHer || 'Ela'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -407,7 +411,7 @@ export default function Settings() {
                           <div className="flex items-center gap-2">
                             <span className="text-sm">{userEmail}</span>
                             <span className={`text-sm font-medium ${up.persona === 'him' ? 'text-him' : 'text-her'}`}>
-                              ({up.persona === 'him' ? (nameHim || 'Ele') : (nameHer || 'Ela')})
+                              ({up.persona === 'him' ? (couple.nameHim || 'Ele') : (couple.nameHer || 'Ela')})
                             </span>
                           </div>
                           <Button variant="ghost" size="sm" onClick={() => removeUserPersona(up.user_id)}>
@@ -422,62 +426,63 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          {/* Names and Colors */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Nomes e Cores
-              </CardTitle>
-              <CardDescription>
-                Configure os nomes e a paleta de cores para ele e ela
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                {/* Him section */}
+          {/* My Settings - Only show if user has a persona */}
+          {currentUser?.persona ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Minhas Configurações
+                </CardTitle>
+                <CardDescription>
+                  Configure seu nome e suas cores personalizadas
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div className="space-y-4 rounded-lg border border-border p-4">
-                  <h3 className="font-semibold text-him">Ele</h3>
+                  <h3 className="font-semibold text-primary">
+                    Suas configurações ({currentUser.persona === 'him' ? 'Ele' : 'Ela'})
+                  </h3>
                   <div className="space-y-2">
-                    <Label htmlFor="nameHim">Nome</Label>
+                    <Label htmlFor="myName">Meu Nome</Label>
                     <Input
-                      id="nameHim"
-                      value={nameHim}
-                      onChange={(e) => setNameHim(e.target.value)}
-                      placeholder="Nome dele"
+                      id="myName"
+                      value={myName}
+                      onChange={(e) => setMyName(e.target.value)}
+                      placeholder="Seu nome"
                     />
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="primaryHim">Cor primária</Label>
+                      <Label htmlFor="myPrimary">Minha cor primária</Label>
                       <div className="flex gap-2">
                         <Input
-                          id="primaryHim"
+                          id="myPrimary"
                           type="color"
-                          value={primaryHimHex}
-                          onChange={(e) => setPrimaryHimHex(e.target.value)}
+                          value={myPrimaryHex}
+                          onChange={(e) => setMyPrimaryHex(e.target.value)}
                           className="h-10 w-16 cursor-pointer p-1"
                         />
                         <Input
-                          value={primaryHimHex}
-                          onChange={(e) => setPrimaryHimHex(e.target.value)}
+                          value={myPrimaryHex}
+                          onChange={(e) => setMyPrimaryHex(e.target.value)}
                           className="flex-1"
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="secondaryHim">Cor secundária</Label>
+                      <Label htmlFor="mySecondary">Minha cor secundária</Label>
                       <div className="flex gap-2">
                         <Input
-                          id="secondaryHim"
+                          id="mySecondary"
                           type="color"
-                          value={secondaryHimHex}
-                          onChange={(e) => setSecondaryHimHex(e.target.value)}
+                          value={mySecondaryHex}
+                          onChange={(e) => setMySecondaryHex(e.target.value)}
                           className="h-10 w-16 cursor-pointer p-1"
                         />
                         <Input
-                          value={secondaryHimHex}
-                          onChange={(e) => setSecondaryHimHex(e.target.value)}
+                          value={mySecondaryHex}
+                          onChange={(e) => setMySecondaryHex(e.target.value)}
                           className="flex-1"
                         />
                       </div>
@@ -487,84 +492,38 @@ export default function Settings() {
                   <div className="mt-4 flex gap-2">
                     <div 
                       className="h-8 flex-1 rounded" 
-                      style={{ backgroundColor: primaryHimHex }}
+                      style={{ backgroundColor: myPrimaryHex }}
                     />
                     <div 
                       className="h-8 flex-1 rounded" 
-                      style={{ backgroundColor: secondaryHimHex }}
+                      style={{ backgroundColor: mySecondaryHex }}
                     />
                   </div>
                 </div>
 
-                {/* Her section */}
-                <div className="space-y-4 rounded-lg border border-border p-4">
-                  <h3 className="font-semibold text-her">Ela</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="nameHer">Nome</Label>
-                    <Input
-                      id="nameHer"
-                      value={nameHer}
-                      onChange={(e) => setNameHer(e.target.value)}
-                      placeholder="Nome dela"
-                    />
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="primaryHer">Cor primária</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="primaryHer"
-                          type="color"
-                          value={primaryHerHex}
-                          onChange={(e) => setPrimaryHerHex(e.target.value)}
-                          className="h-10 w-16 cursor-pointer p-1"
-                        />
-                        <Input
-                          value={primaryHerHex}
-                          onChange={(e) => setPrimaryHerHex(e.target.value)}
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="secondaryHer">Cor secundária</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="secondaryHer"
-                          type="color"
-                          value={secondaryHerHex}
-                          onChange={(e) => setSecondaryHerHex(e.target.value)}
-                          className="h-10 w-16 cursor-pointer p-1"
-                        />
-                        <Input
-                          value={secondaryHerHex}
-                          onChange={(e) => setSecondaryHerHex(e.target.value)}
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  {/* Preview */}
-                  <div className="mt-4 flex gap-2">
-                    <div 
-                      className="h-8 flex-1 rounded" 
-                      style={{ backgroundColor: primaryHerHex }}
-                    />
-                    <div 
-                      className="h-8 flex-1 rounded" 
-                      style={{ backgroundColor: secondaryHerHex }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <Button onClick={saveNamesAndColors} disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                <Save className="mr-2 h-4 w-4" />
-                Salvar nomes e cores
-              </Button>
-            </CardContent>
-          </Card>
+                <Button onClick={saveMySettings} disabled={saving}>
+                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvar minhas configurações
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Minhas Configurações
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Você precisa ter uma persona associada para configurar seu nome e cores. 
+                  Peça para o outro membro do casal associar seu usuário a uma persona.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Spotify */}
           <Card>
