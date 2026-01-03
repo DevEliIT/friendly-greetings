@@ -72,18 +72,6 @@ function hslToHex(hsl: string): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-interface UserPersona {
-  user_id: string;
-  persona: 'him' | 'her';
-  email?: string;
-}
-
-interface AuthUser {
-  id: string;
-  email: string;
-  created_at: string;
-}
-
 export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -100,16 +88,9 @@ export default function Settings() {
   const [myPrimaryHex, setMyPrimaryHex] = useState('#3b82f6');
   const [mySecondaryHex, setMySecondaryHex] = useState('#60a5fa');
 
-  // User personas (for association management)
-  const [userPersonas, setUserPersonas] = useState<UserPersona[]>([]);
-  const [authUsers, setAuthUsers] = useState<AuthUser[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState('');
-  const [newUserPersona, setNewUserPersona] = useState<'him' | 'her'>('him');
+  // Self persona selection
+  const [selectedPersona, setSelectedPersona] = useState<'him' | 'her'>('him');
   const [savingPersona, setSavingPersona] = useState(false);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-
-  // Get the persona suffix for current user's settings
-  const personaSuffix = currentUser?.persona === 'him' ? 'him' : 'her';
 
   useEffect(() => {
     async function fetchSettings() {
@@ -145,94 +126,50 @@ export default function Settings() {
         setStoryHer(pageData.content_her || '');
       }
 
-      // Fetch user personas
-      const { data: personasData } = await supabase
-        .from('user_personas')
-        .select('user_id, persona');
-
-      if (personasData) {
-        setUserPersonas(personasData as UserPersona[]);
-      }
-
-      // Fetch auth users from edge function
-      setLoadingUsers(true);
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.access_token) {
-          const response = await supabase.functions.invoke('list-users', {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          });
-          if (response.data?.users) {
-            setAuthUsers(response.data.users);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch users:', err);
-      }
-      setLoadingUsers(false);
-
       setLoading(false);
     }
 
     fetchSettings();
   }, [currentUser?.persona]);
 
-  async function saveUserPersona() {
-    if (!selectedUserId) {
-      toast({ title: 'Selecione um usuário', variant: 'destructive' });
+  async function saveMyPersona() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({ title: 'Você precisa estar logado', variant: 'destructive' });
       return;
     }
 
     setSavingPersona(true);
 
-    // Check if persona already exists
+    // Check if already has a persona
     const { data: existing } = await supabase
       .from('user_personas')
       .select('id')
-      .eq('user_id', selectedUserId)
+      .eq('user_id', user.id)
       .maybeSingle();
 
     if (existing) {
       await supabase
         .from('user_personas')
-        .update({ persona: newUserPersona })
-        .eq('user_id', selectedUserId);
+        .update({ persona: selectedPersona })
+        .eq('user_id', user.id);
     } else {
       const { error } = await supabase
         .from('user_personas')
-        .insert({ user_id: selectedUserId, persona: newUserPersona });
+        .insert({ user_id: user.id, persona: selectedPersona });
 
       if (error) {
-        toast({ title: 'Erro ao associar usuário', description: error.message, variant: 'destructive' });
+        toast({ title: 'Erro ao salvar persona', description: error.message, variant: 'destructive' });
         setSavingPersona(false);
         return;
       }
     }
 
-    // Refresh list
-    const { data: personasData } = await supabase
-      .from('user_personas')
-      .select('user_id, persona');
-
-    if (personasData) {
-      setUserPersonas(personasData as UserPersona[]);
-    }
-
-    setSelectedUserId('');
-    toast({ title: 'Associação salva' });
+    toast({ title: 'Persona salva! Recarregando...' });
     setSavingPersona(false);
-  }
-
-  async function removeUserPersona(userId: string) {
-    await supabase
-      .from('user_personas')
-      .delete()
-      .eq('user_id', userId);
-
-    setUserPersonas(prev => prev.filter(p => p.user_id !== userId));
-    toast({ title: 'Associação removida' });
+    
+    // Reload to apply persona
+    window.location.reload();
   }
 
   async function saveSetting(key: string, value: string) {
@@ -343,88 +280,41 @@ export default function Settings() {
             </Card>
           )}
 
-          {/* User Personas Association */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                Associação de Usuários
-              </CardTitle>
-              <CardDescription>
-                Associe usuários às personas (Ele/Ela) para aplicar cores personalizadas
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-4">
-                <div className="flex-1 min-w-[200px]">
-                  <Label htmlFor="userId">Usuário</Label>
-                  {loadingUsers ? (
-                    <div className="flex items-center gap-2 py-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm text-muted-foreground">Carregando usuários...</span>
-                    </div>
-                  ) : (
-                    <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+          {/* Self Persona Selection - only if user doesn't have one yet */}
+          {!currentUser?.persona && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Escolha sua Persona
+                </CardTitle>
+                <CardDescription>
+                  Defina se você é "Ele" ou "Ela" no casal
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-4 items-end">
+                  <div className="w-48">
+                    <Label>Eu sou...</Label>
+                    <Select value={selectedPersona} onValueChange={(v) => setSelectedPersona(v as 'him' | 'her')}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione um usuário" />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {authUsers
-                          .filter(u => !userPersonas.find(p => p.user_id === u.id))
-                          .map(user => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.email}
-                            </SelectItem>
-                          ))}
+                        <SelectItem value="him">Ele</SelectItem>
+                        <SelectItem value="her">Ela</SelectItem>
                       </SelectContent>
                     </Select>
-                  )}
-                </div>
-                <div className="w-32">
-                  <Label>Persona</Label>
-                  <Select value={newUserPersona} onValueChange={(v) => setNewUserPersona(v as 'him' | 'her')}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="him">{couple.nameHim || 'Ele'}</SelectItem>
-                      <SelectItem value="her">{couple.nameHer || 'Ela'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end">
-                  <Button onClick={saveUserPersona} disabled={savingPersona || !selectedUserId}>
+                  </div>
+                  <Button onClick={saveMyPersona} disabled={savingPersona}>
                     {savingPersona && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Associar
+                    <Save className="mr-2 h-4 w-4" />
+                    Salvar minha persona
                   </Button>
                 </div>
-              </div>
-
-              {userPersonas.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <h4 className="text-sm font-medium">Usuários associados:</h4>
-                  <div className="space-y-2">
-                    {userPersonas.map(up => {
-                      const userEmail = authUsers.find(u => u.id === up.user_id)?.email || up.user_id;
-                      return (
-                        <div key={up.user_id} className="flex items-center justify-between rounded-lg border border-border p-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm">{userEmail}</span>
-                            <span className={`text-sm font-medium ${up.persona === 'him' ? 'text-him' : 'text-her'}`}>
-                              ({up.persona === 'him' ? (couple.nameHim || 'Ele') : (couple.nameHer || 'Ela')})
-                            </span>
-                          </div>
-                          <Button variant="ghost" size="sm" onClick={() => removeUserPersona(up.user_id)}>
-                            Remover
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           {/* My Settings - Only show if user has a persona */}
           {currentUser?.persona ? (
