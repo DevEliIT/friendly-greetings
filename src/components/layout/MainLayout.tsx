@@ -23,7 +23,10 @@ export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, isLoading, signOut } = useAuth();
-  const { couple } = useTheme();
+  const { couple, currentUser } = useTheme();
+
+  // Get the icon color class based on the current user's persona
+  const iconColorClass = currentUser?.persona === 'her' ? 'text-her' : 'text-him';
 
   // Redirect to login if not authenticated
   if (!isLoading && !user) {
@@ -33,7 +36,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <Heart className="h-8 w-8 animate-pulse text-accent" />
+        <Heart className="h-8 w-8 animate-pulse text-primary" />
       </div>
     );
   }
@@ -44,7 +47,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r border-border bg-sidebar md:block">
         <div className="flex h-full flex-col">
           <Link to="/" className="flex items-center gap-2 border-b border-border px-6 py-5">
-            <Heart className="h-6 w-6 text-accent" fill="currentColor" />
+            <Heart className={cn("h-6 w-6", iconColorClass)} fill="currentColor" />
             <span className="font-display text-xl font-semibold tracking-wide">
               <span className="text-him">{couple.nameHim}</span> & <span className="text-her">{couple.nameHer}</span>
             </span>
@@ -65,7 +68,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                       : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
                   )}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className={cn("h-4 w-4", isActive && iconColorClass)} />
                   {item.label}
                 </Link>
               );
@@ -80,7 +83,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               </Button>
             </div>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              Feito com <Heart className="inline h-3 w-3 text-accent" fill="currentColor" /> por nós dois
+              Feito com <Heart className={cn("inline h-3 w-3", iconColorClass)} fill="currentColor" /> por nós dois
             </p>
           </div>
         </div>
@@ -89,7 +92,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Mobile Header */}
       <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-background px-4 md:hidden">
         <Link to="/" className="flex items-center gap-2">
-          <Heart className="h-5 w-5 text-accent" fill="currentColor" />
+          <Heart className={cn("h-5 w-5", iconColorClass)} fill="currentColor" />
           <span className="font-display text-lg font-semibold"><span className="text-him">{couple.nameHim}</span> & <span className="text-her">{couple.nameHer}</span></span>
         </Link>
         <div className="flex items-center gap-2">
@@ -135,7 +138,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                     : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
                 )}
               >
-                <item.icon className="h-4 w-4" />
+                <item.icon className={cn("h-4 w-4", isActive && iconColorClass)} />
                 {item.label}
               </Link>
             );
