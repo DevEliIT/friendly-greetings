@@ -60,7 +60,7 @@ export function SpotifyPlaylist() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="mb-8 flex items-center gap-3">
-            <Music className="h-6 w-6 text-accent" />
+            <Music className="h-6 w-6 text-primary" />
             <h2 className="font-display text-3xl font-semibold">Nossa Playlist</h2>
           </div>
           <Skeleton className="mx-auto h-[380px] max-w-2xl rounded-xl" />
@@ -74,7 +74,7 @@ export function SpotifyPlaylist() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="mb-8 flex items-center gap-3">
-            <Music className="h-6 w-6 text-accent" />
+            <Music className="h-6 w-6 text-primary" />
             <h2 className="font-display text-3xl font-semibold">Nossa Playlist</h2>
           </div>
           <div className="mx-auto max-w-2xl rounded-lg border border-dashed border-border bg-card/50 py-16 text-center">
@@ -90,7 +90,7 @@ export function SpotifyPlaylist() {
     <section className="py-16">
       <div className="container mx-auto px-4">
         <div className="mb-8 flex items-center gap-3">
-          <Music className="h-6 w-6 text-accent" />
+          <Music className="h-6 w-6 text-primary" />
           <h2 className="font-display text-3xl font-semibold">Nossa Playlist</h2>
         </div>
         <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-border/50 shadow-lg">

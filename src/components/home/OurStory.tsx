@@ -34,7 +34,7 @@ export function OurStory() {
     <section id="nossa-historia" className="bg-card/50 py-16 h-full">
       <div className="container mx-auto px-4">
         <div className="mb-8 flex items-center gap-3">
-          <Heart className="h-6 w-6 text-accent" fill="currentColor" />
+          <Heart className="h-6 w-6 text-primary" fill="currentColor" />
           <h2 className="font-display text-3xl font-semibold">Nossa História</h2>
         </div>
 
