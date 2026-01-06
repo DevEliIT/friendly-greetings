@@ -213,10 +213,66 @@ export default function PostForm() {
           { post_id: postId, persona: 'her', content: contentHer },
         ]);
 
-        // Handle media - also copy to gallery "Notícias Postadas" category
-        await supabase.from('post_media').delete().eq('post_id', postId);
-        
-        if (media.length > 0) {
+        // Handle media - also copy NEW media to gallery "Notícias Postadas" category
+        // Filter out new media (those with temp IDs)
+        const newMedia = media.filter((m) => m.id.startsWith('temp-'));
+        const existingMedia = media.filter((m) => !m.id.startsWith('temp-'));
+
+        // Delete media that was removed
+        if (isEditing) {
+          const existingIds = existingMedia.map((m) => m.id);
+          if (existingIds.length > 0) {
+            await supabase
+              .from('post_media')
+              .delete()
+              .eq('post_id', postId)
+              .not('id', 'in', `(${existingIds.join(',')})`);
+          } else {
+            await supabase.from('post_media').delete().eq('post_id', postId);
+          }
+
+          // Update positions of existing media
+          for (let i = 0; i < existingMedia.length; i++) {
+            await supabase
+              .from('post_media')
+              .update({ position: i })
+              .eq('id', existingMedia[i].id);
+          }
+        }
+
+        // Insert only new media
+        if (newMedia.length > 0) {
+          await supabase.from('post_media').insert(
+            newMedia.map((m, i) => ({
+              post_id: postId,
+              url: m.url,
+              media_type: m.media_type,
+              caption: m.caption,
+              position: existingMedia.length + i,
+            }))
+          );
+
+          // Get the "Notícias Postadas" category - only add NEW media to gallery
+          const { data: newsCategory } = await supabase
+            .from('gallery_categories')
+            .select('id')
+            .eq('slug', 'noticias-postadas')
+            .maybeSingle();
+
+          if (newsCategory) {
+            // Add only NEW media to gallery under the news category
+            await supabase.from('gallery_photos').insert(
+              newMedia.map((m, i) => ({
+                url: m.url,
+                media_type: m.media_type,
+                caption: m.caption || title,
+                position: i,
+                category_id: newsCategory.id,
+              }))
+            );
+          }
+        } else if (!isEditing && media.length > 0) {
+          // For new posts, insert all media
           await supabase.from('post_media').insert(
             media.map((m, i) => ({
               post_id: postId,
@@ -227,7 +283,6 @@ export default function PostForm() {
             }))
           );
 
-          // Get the "Notícias Postadas" category
           const { data: newsCategory } = await supabase
             .from('gallery_categories')
             .select('id')
@@ -235,7 +290,6 @@ export default function PostForm() {
             .maybeSingle();
 
           if (newsCategory) {
-            // Add media to gallery under the news category
             await supabase.from('gallery_photos').insert(
               media.map((m, i) => ({
                 url: m.url,
