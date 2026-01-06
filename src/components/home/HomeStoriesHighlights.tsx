@@ -37,7 +37,7 @@ export function HomeStoriesHighlights() {
         <div className="container mx-auto px-4">
           <div className="mb-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Newspaper className="h-6 w-6 text-accent" />
+              <Newspaper className="h-6 w-6 text-primary" />
               <h2 className="font-display text-3xl font-semibold">Vivências</h2>
             </div>
           </div>
@@ -64,7 +64,7 @@ export function HomeStoriesHighlights() {
       <div className="container mx-auto px-4">
         <div className="mb-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Newspaper className="h-6 w-6 text-accent" />
+            <Newspaper className="h-6 w-6 text-primary" />
             <h2 className="font-display text-3xl font-semibold">Vivências</h2>
           </div>
           <Link to="/noticias">

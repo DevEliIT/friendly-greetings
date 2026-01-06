@@ -78,7 +78,7 @@ export function HomeGalleryHighlights() {
         <div className="container mx-auto px-4">
           <div className="mb-8 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Camera className="h-6 w-6 text-accent" />
+              <Camera className="h-6 w-6 text-primary" />
               <h2 className="font-display text-3xl font-semibold">Galeria</h2>
             </div>
           </div>
@@ -101,7 +101,7 @@ export function HomeGalleryHighlights() {
       <div className="container mx-auto px-4">
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Camera className="h-6 w-6 text-accent" />
+            <Camera className="h-6 w-6 text-primary" />
             <h2 className="font-display text-3xl font-semibold">Galeria</h2>
           </div>
           <Link to="/galeria">
