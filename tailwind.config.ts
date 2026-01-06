@@ -60,10 +60,12 @@ export default {
         him: {
           DEFAULT: "hsl(var(--color-him))",
           secondary: "hsl(var(--color-him-secondary))",
+          foreground: "hsl(var(--color-him))",
         },
         her: {
           DEFAULT: "hsl(var(--color-her))",
           secondary: "hsl(var(--color-her-secondary))",
+          foreground: "hsl(var(--color-her))",
         },
       },
       borderRadius: {
