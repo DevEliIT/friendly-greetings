@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Heart, LayoutDashboard, FileText, Image, Settings, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/hooks/useTheme';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { cn } from '@/lib/utils';
@@ -21,9 +22,13 @@ const navItems = [
 
 export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const { signOut } = useAuth();
+  const { currentUser } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Get the icon color class based on the current user's persona
+  const iconColorClass = currentUser?.persona === 'her' ? 'text-her' : 'text-him';
 
   const handleLogout = async () => {
     await signOut();
@@ -37,7 +42,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-border px-6 py-4">
             <div className="flex items-center gap-2">
-              <Heart className="h-6 w-6 text-accent" fill="currentColor" />
+              <Heart className={cn("h-6 w-6", iconColorClass)} fill="currentColor" />
               <span className="font-display text-lg font-semibold text-sidebar-foreground">Admin</span>
             </div>
             <ThemeToggle />
@@ -58,7 +63,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                       : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
                   )}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className={cn("h-4 w-4", isActive && iconColorClass)} />
                   {item.label}
                 </Link>
               );
@@ -81,7 +86,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       {/* Mobile Header */}
       <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur md:hidden">
         <div className="flex items-center gap-2">
-          <Heart className="h-5 w-5 text-accent" fill="currentColor" />
+          <Heart className={cn("h-5 w-5", iconColorClass)} fill="currentColor" />
           <span className="font-display text-lg font-semibold">Admin</span>
         </div>
         <Button
@@ -124,7 +129,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                       : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
                   )}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className={cn("h-4 w-4", isActive && iconColorClass)} />
                   {item.label}
                 </Link>
               );
