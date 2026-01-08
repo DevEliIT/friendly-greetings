@@ -134,23 +134,23 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     init();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setCurrentUser(null);
       } else if (session?.user) {
-        setTimeout(() => {
-          fetchUserPersona(session.user.id).then(persona => {
-            if (persona) {
-              setCurrentUser({
-                id: session.user.id,
-                persona,
-                name: persona === 'him' ? couple.nameHim : couple.nameHer,
-                primaryColor: persona === 'him' ? couple.primaryHim : couple.primaryHer,
-                secondaryColor: persona === 'him' ? couple.secondaryHim : couple.secondaryHer,
-              });
-            }
+        // Re-fetch settings to avoid stale closure
+        const coupleData = await fetchSettings();
+        const persona = await fetchUserPersona(session.user.id);
+        
+        if (persona) {
+          setCurrentUser({
+            id: session.user.id,
+            persona,
+            name: persona === 'him' ? coupleData.nameHim : coupleData.nameHer,
+            primaryColor: persona === 'him' ? coupleData.primaryHim : coupleData.primaryHer,
+            secondaryColor: persona === 'him' ? coupleData.secondaryHim : coupleData.secondaryHer,
           });
-        }, 0);
+        }
       }
     });
 
