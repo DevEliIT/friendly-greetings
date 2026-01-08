@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 import type { Persona, PostMedia } from '@/types/blog';
 
@@ -24,6 +25,7 @@ export default function PostForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentUser } = useTheme();
   const isEditing = !!id;
 
   const [loading, setLoading] = useState(isEditing);
@@ -32,7 +34,7 @@ export default function PostForm() {
 
   // Form state
   const [title, setTitle] = useState('');
-  const [authorPersona, setAuthorPersona] = useState<Persona>('him');
+  const [authorPersona, setAuthorPersona] = useState<Persona | null>(null);
   const [isPublished, setIsPublished] = useState(false);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [coverType, setCoverType] = useState<'image' | 'video'>('image');
@@ -41,6 +43,13 @@ export default function PostForm() {
   const [media, setMedia] = useState<PostMedia[]>([]);
   const [storyDate, setStoryDate] = useState<Date | undefined>();
   const [location, setLocation] = useState('');
+
+  // Auto-select author based on logged user's persona (only for new posts)
+  useEffect(() => {
+    if (!isEditing && currentUser?.persona && authorPersona === null) {
+      setAuthorPersona(currentUser.persona);
+    }
+  }, [currentUser, isEditing, authorPersona]);
 
   useEffect(() => {
     if (isEditing) {
@@ -349,7 +358,7 @@ export default function PostForm() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Autor</Label>
-                  <Select value={authorPersona} onValueChange={(v) => setAuthorPersona(v as Persona)}>
+                  <Select value={authorPersona || 'him'} onValueChange={(v) => setAuthorPersona(v as Persona)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
